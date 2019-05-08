@@ -1,3 +1,122 @@
 
 https://github.com/aodendaal/aspnetboilerplate-core-ng
 https://www.c-sharpcorner.com/article/crud-operations-with-asp-net-core-using-angular-5-and-ado-net/
+    public interface IEmployeeAppService : IApplicationService
+    {
+        Task<ListResultDto<Employee>> GetAllEmployees();
+    }
+    [AbpAuthorize(PermissionNames.Pages_Users)]
+    public class EmployeeAppService : MyReEsopAppServiceBase,IEmployeeAppService
+    {
+        
+        private readonly IEmployeeRepository _employeeRepository;
+
+        public EmployeeAppService(IRepository<Employee> repository, IEmployeeRepository employeeRepository)
+        {
+            _employeeRepository = employeeRepository;
+        }
+
+        public async Task<ListResultDto<Employee>> GetAllEmployees()
+        {
+            var e = await _employeeRepository.GetAllListAsync();
+            return new ListResultDto<Employee>(ObjectMapper.Map<List<Employee>>(e));
+        }
+    }
+    [AutoMapFrom(typeof(Employee))]
+    public class EmployeeListDto : EntityDto
+    {
+        public string Name { get; set; }
+
+        public string Gender { get; set; }
+
+        public string Department { get; set; }
+
+        public string City { get; set; }
+    }
+    
+     public interface IEmployeeRepository : IRepository<Employee>
+    {
+        Task<List<string>> GetAllEmployees();
+    }
+    public class Employee : Entity
+    {
+        
+        public string Name { get; set; }
+
+        public string Gender { get; set; }
+
+        public string Department { get; set; }
+
+        public string City { get; set; }
+    }
+    
+    public class EmployeeRepository : MyReEsopRepositoryBase<Employee>, IEmployeeRepository
+    {
+        private readonly IActiveTransactionProvider _transactionProvider;
+
+        public EmployeeRepository(IDbContextProvider<MyReEsopDbContext> dbContextProvider, IActiveTransactionProvider transactionProvider)
+            : base(dbContextProvider)
+        {
+            _transactionProvider = transactionProvider;
+        }
+
+        public async Task<List<string>> GetAllEmployees()
+        {
+            EnsureConnectionOpen();
+            //List<Employee> lstemployee = new List<Employee>();
+            using (var command = CreateCommand("spGetAllEmployees", CommandType.StoredProcedure))
+            {
+                using (var dataReader = await command.ExecuteReaderAsync())
+                {
+                    var result = new List<string>();
+                    //var e = await _employeeRepository.GetAllListAsync();
+                    while (dataReader.Read())
+                    {
+                        result.Add(Convert.ToInt32(dataReader["EmployeeID"]).ToString());
+                        result.Add(dataReader["Name"].ToString());
+                        result.Add(dataReader["Gender"].ToString());
+                        result.Add(dataReader["Department"].ToString());
+                        result.Add(dataReader["City"].ToString());
+                    }
+
+                    return result;
+                }
+            }
+        }
+
+
+        private DbCommand CreateCommand(string commandText, CommandType commandType, params SqlParameter[] parameters)
+        {
+            var command = Context.Database.GetDbConnection().CreateCommand();
+
+            command.CommandText = commandText;
+            command.CommandType = commandType;
+            command.Transaction = GetActiveTransaction();
+
+            foreach (var parameter in parameters)
+            {
+                command.Parameters.Add(parameter);
+            }
+
+            return command;
+        }
+
+        private void EnsureConnectionOpen()
+        {
+            var connection = Context.Database.GetDbConnection();
+
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+        }
+
+        private DbTransaction GetActiveTransaction()
+        {
+            return (DbTransaction)_transactionProvider.GetActiveTransaction(new ActiveTransactionProviderArgs
+            {
+                {"ContextType", typeof(MyReEsopDbContext) },
+                {"MultiTenancySide", MultiTenancySide }
+            });
+        }
+    }
