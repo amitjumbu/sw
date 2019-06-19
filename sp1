@@ -1,0 +1,60 @@
+USE [mytestprojDb]
+GO
+/****** Object:  StoredProcedure [dbo].[GetIntrumentType]    Script Date: 6/20/2019 1:25:15 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+ALTER PROCEDURE [dbo].[GetIntrumentType] 
+	
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+declare   @Report  table
+(
+	MIT_ID int ,
+	INSTRUMENT_NAME varchar(500),
+	MSE_ID varchar(100),
+	CurrencySymbol nvarchar(max),
+	CurrencyAlias varchar(50),
+	SEM_VAL_RPT_ID int ,
+	IS_ENABLED  int,
+	temp1MSE_ID int,
+	temp2MSE_ID int,
+    temp1MSE_desc varchar(50),
+	temp2MSE_desc varchar(50),
+	CIM_ID int,
+	CurrencyID int
+)
+
+insert into @Report (MIT_ID,INSTRUMENT_NAME,MSE_ID,CurrencySymbol,CurrencyAlias ,SEM_VAL_RPT_ID,IS_ENABLED ,temp1MSE_ID ,temp2MSE_ID ,CIM_ID ,CurrencyID)
+SELECT	MIT.MIT_ID, MIT.INSTRUMENT_NAME, CIM.MSE_ID,CurM.CurrencySymbol,CurM.CurrencyAlias,CIM.SEM_VAL_RPT_ID,IsNull(CIM.IS_ENABLED ,'0') AS IS_ENABLED
+,LEFT(CIM.MSE_ID, CHARINDEX(',', CIM.MSE_ID + ',') - 1) as temp1MSE_ID, right(CIM.MSE_ID, CHARINDEX(',',CIM.MSE_ID + ',') - 1) as temp2MSE_ID ,CIM.CIM_ID
+,CurM.CurrencyID
+FROM  MST_INSTRUMENT_TYPE AS MIT
+LEFT OUTER JOIN COMPANY_INSTRUMENT_MAPPING AS CIM ON CIM.MIT_ID = MIT.MIT_ID 
+LEFT OUTER JOIN CurrencyMaster AS CurM ON CurM.CurrencyID = CIM.CurrencyID
+LEFT OUTER JOIN MST_STOCK_EXCHANGE AS MSE ON MSE.MSE_ID = CIM.CIM_ID
+
+   
+update @Report set temp1MSE_desc = s.STOCK_EXCHANGE_SYMBOL  
+from @Report r inner join [MST_STOCK_EXCHANGE] s on r.temp1MSE_ID=s.MSE_ID 
+where r.temp1MSE_ID is not null
+
+ update @Report set temp2MSE_desc = s.STOCK_EXCHANGE_SYMBOL  
+from @Report r inner join [MST_STOCK_EXCHANGE] s on r.temp2MSE_ID=s.MSE_ID 
+where r.temp2MSE_ID is not null
+
+ select MIT_ID,INSTRUMENT_NAME,MSE_ID,CurrencySymbol,CurrencyAlias ,SEM_VAL_RPT_ID,IS_ENABLED ,
+ isnull(temp1MSE_desc,'') +','+  isnull(temp2MSE_desc,'') as STOCK_EXCHANGE_SYMBOL, CIM_ID ,CurrencyID from @Report  
+ order by  mit_id
+END
