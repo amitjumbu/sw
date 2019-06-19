@@ -1,0 +1,22 @@
+USE [mytestprojDb]
+GO
+/****** Object:  StoredProcedure [dbo].[updatesptemp1MIT]    Script Date: 6/20/2019 1:30:09 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+--------  [updatesptemp1MIT] 
+ALTER procedure [dbo].[updatesptemp1MIT] 
+@MIT_ID int,@CIM_ID int  ,@MSE_ID int ,@CurrencyID int,@SEM_VAL_RPT_ID int,@IS_ENABLED  bit,
+@UPDATED_BY varchar(50),@type varchar(50)        
+     
+as         
+Begin 
+
+SET NOCOUNT ON;  
+  
+update [COMPANY_INSTRUMENT_MAPPING]   set CurrencyID = @CurrencyID ,MSE_ID= @MSE_ID , SEM_VAL_RPT_ID = @SEM_VAL_RPT_ID , IS_ENABLED = @IS_ENABLED
+where MIT_ID= @MIT_ID  and CIM_ID=@CIM_ID
+
+End
