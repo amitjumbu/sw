@@ -1,0 +1,10 @@
+brands: SelectItems[]=[];
+this.strary = this.stockexchanges.map((obj: StockExchangeDto) => obj.stocK_EXCHANGE_SYMBOL );
+for (let i = 0; i < this.strary.length; i++) {
+                    let newName = {
+                        label: this.strary[i],
+                        value: this.strary[i]
+                    };
+                    this.brands.push(newName);
+                }
+console.log('products1: ', this.brands)
