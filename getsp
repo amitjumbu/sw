@@ -1,0 +1,84 @@
+USE [mytestprojDb]
+GO
+/****** Object:  StoredProcedure [dbo].[GetIntrumentType]    Script Date: 7/3/2019 11:52:40 PM ******/
+--EXEC [GetIntrumentType]
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+ALTER PROCEDURE [dbo].[GetIntrumentType] 
+	
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+declare   @Report  table
+(
+	MIT_ID int ,
+	INSTRUMENT_NAME varchar(500),
+	MSE_ID varchar(1000),
+	CurrencySymbol nvarchar(max),
+	CurrencyAlias varchar(50),
+	SEM_VAL_RPT_ID int ,
+	IS_ENABLED  int,
+	temp1MSE_ID int,
+	temp2MSE_ID int,
+    temp1MSE_desc varchar(50),
+	temp2MSE_desc varchar(50),
+	CIM_ID int,
+	CurrencyID int,
+	S_E_SYMBOL_Rpt varchar(50)
+)
+
+declare   @MSTSTOCKEXCHANGE  table
+(
+	MSE_ID nvarchar(max) ,
+	STOCK_EXCHANGE_SYMBOL varchar(500)	
+)
+
+insert into @MSTSTOCKEXCHANGE (MSE_ID,STOCK_EXCHANGE_SYMBOL )
+select MSE_ID,STOCK_EXCHANGE_SYMBOL from [MST_STOCK_EXCHANGE]
+
+
+insert into @Report (MIT_ID,INSTRUMENT_NAME,MSE_ID,CurrencySymbol,CurrencyAlias ,SEM_VAL_RPT_ID,IS_ENABLED ,temp1MSE_ID ,temp2MSE_ID ,CIM_ID ,CurrencyID,S_E_SYMBOL_Rpt)
+SELECT	MIT.MIT_ID, MIT.INSTRUMENT_NAME, CIM.MSE_ID,CurM.CurrencySymbol,CurM.CurrencyAlias,CIM.SEM_VAL_RPT_ID,IsNull(CIM.IS_ENABLED ,'0') AS IS_ENABLED
+,LEFT(CIM.MSE_ID, CHARINDEX(',', CIM.MSE_ID + ',') - 1) as temp1MSE_ID, right(CIM.MSE_ID, CHARINDEX(',',CIM.MSE_ID + ',') - 1) as temp2MSE_ID ,CIM.CIM_ID
+,CurM.CurrencyID,MSE.STOCK_EXCHANGE_SYMBOL
+FROM  MST_INSTRUMENT_TYPE AS MIT
+LEFT OUTER JOIN COMPANY_INSTRUMENT_MAPPING AS CIM ON CIM.MIT_ID = MIT.MIT_ID
+LEFT OUTER JOIN CurrencyMaster AS CurM ON CurM.CurrencyID = CIM.CurrencyID
+LEFT OUTER JOIN MST_STOCK_EXCHANGE AS MSE ON MSE.MSE_ID = CIM.CIM_ID 
+
+
+select SM.MIT_ID,SM.INSTRUMENT_NAME,SM.MSE_ID,SM.CurrencySymbol,SM.CurrencyAlias ,SM.SEM_VAL_RPT_ID,SM.IS_ENABLED , SM.CIM_ID ,SM.CurrencyID,
+SM.S_E_SYMBOL_Rpt as STOCK_EXCHANGE_SYMBOL_VAL_RPT,
+             (
+       select ','+CM.STOCK_EXCHANGE_SYMBOL
+       from @MSTSTOCKEXCHANGE as CM 
+	   where ','+SM.MSE_ID+',' like '%,'+CM.MSE_ID+',%'
+       for xml path(''), type
+       ).value('substring(text()[1], 2)', 'varchar(max)') as STOCK_EXCHANGE_SYMBOL
+
+from @Report as SM -----inner join  [MST_STOCK_EXCHANGE] 
+order by  SM.mit_id
+
+
+
+
+
+
+------select* from @Report
+
+--select MIT_ID,INSTRUMENT_NAME,MSE_ID,CurrencySymbol,CurrencyAlias ,SEM_VAL_RPT_ID,IS_ENABLED ,
+--isnull(temp1MSE_desc,'') +','+  isnull(temp2MSE_desc,'') as STOCK_EXCHANGE_SYMBOL, CIM_ID ,CurrencyID,S_E_SYMBOL_Rpt as STOCK_EXCHANGE_SYMBOL_VAL_RPT from @Report  
+
+--order by  mit_id
+END
