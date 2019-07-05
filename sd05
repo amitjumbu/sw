@@ -1,0 +1,361 @@
+//import { Component, OnInit } from '@angular/core';
+//import { Car } from '../../domain/Car';
+import { SelectItems, SelectItem } from '../../common/api';
+//import { CarService } from '../../service/car.service';
+//import { MessageService } from '../../service/message.service';
+import { Component, Injector, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material';
+import { finalize } from 'rxjs/operators';
+import { AppComponentBase } from '@shared/app-component-base';
+import { appModuleAnimation } from '@shared/animations/routerTransition';
+
+import {
+    PagedListingComponentBase,
+    PagedRequestDto
+} from '@shared/paged-listing-component-base';
+import {
+    InstrumentTypeServiceProxy,
+    InstrumentTypeDto,
+    PagedResultDtoOfInstrumentTypeDto,
+    instrumentTypeDto,
+    MasterEntityServiceProxy,
+    StockExchangeDto,
+    ListResultDtoOfStockExchangeDto,
+    CurrencyDto,
+    ListResultDtoOfCurrencyDto,
+    UpdateIntrumentTypeDto
+} from '@shared/service-proxies/service-proxies';
+
+//class PagedInstrumentTypeRequestDto extends PagedRequestDto {
+//    keyword: string;
+//}
+@Component({
+    selector: 'app-instrument-type',
+    templateUrl: './instrument-type.component.html',
+    animations: [appModuleAnimation()],
+    styleUrls: ['./instrument-type.component.css']
+
+})
+
+
+export class InstrumentTypeComponent extends AppComponentBase implements OnInit {
+    saving = false;
+    UpdateIntrumentType: UpdateIntrumentTypeDto = new UpdateIntrumentTypeDto();
+    InstrumentTypes: InstrumentTypeDto[] = [];
+    stockexchanges: StockExchangeDto[] = [];
+    //value: boolean = false;
+    stocknames: SelectItems[] = [];
+    selectedStocks: any[];
+    selectedIns: any[];
+    //selectedchkbox: boolean = true;
+    instT: instrumentTypeDto[] = [];
+    strary: string[];
+    straryid: number[];
+    brands: SelectItems[] = [];
+    selitems: string;
+    splitsingSE: string;
+    splitary: string[];
+    Currencies: CurrencyDto[] = [];
+    CurrSymbolArr: string[];
+    CurrSymbolNames: SelectItems[] = [];
+    curr: string;
+    stocksEdit: string;
+    nse: string;
+    //clonedstockexchange: { [stocK_EXCHANGE_SYMBOL: string]: }
+    //clonedInstrumentType: { [instrumentname: string]: instrumentTypeDto; } = {};
+    clonedCars: { [id: number]: InstrumentTypeDto; } = {};
+    constructor(
+        injector: Injector,
+        private _InstrumentTypeService: InstrumentTypeServiceProxy,
+        private _MasterEntityService: MasterEntityServiceProxy,
+        private _dialog: MatDialog
+    ) {
+        super(injector);
+    }
+
+    ngOnInit(): void {
+
+        this._InstrumentTypeService
+            .getAllInstrumentType()
+            .subscribe((result: PagedResultDtoOfInstrumentTypeDto) => {
+                this.InstrumentTypes = result.items;
+                //this.selectedIns = [];
+                //this.InstrumentTypes.map((item) => this.selectedIns.push(item.sesymbol));
+                //console.log('INS:', this.selectedIns);
+            });
+
+
+        //this.brands = []; 
+        //this.selitems = "NSE";
+        //this.strary = this.stockexchanges.map((obj: StockExchangeDto) => obj.stocK_EXCHANGE_SYMBOL);
+        //console.log('products: ', this.stockexchanges);
+        //console.log('products1: ', this.brands);
+        //this.stockexchanges.
+        //this.brands = [
+        //    { label: this., value: this.stockexchanges.stocK_EXCHANGE_SYMBOL },            
+
+        //];
+        this.getAllStockExchanges();
+        this.getAllCurrency();
+    }
+
+    getAllStockExchanges() {
+        this._MasterEntityService
+            .getAllStockExchange()
+            .subscribe((result: ListResultDtoOfStockExchangeDto) => {
+                this.stockexchanges = result.items;
+                //this.strary = this.stockexchanges.map((obj: StockExchangeDto) => obj.stocK_EXCHANGE_SYMBOL);
+                //this.straryid = this.stockexchanges.map((obj: StockExchangeDto) => obj.id);
+
+                
+
+                this.stockexchanges.forEach(el => {
+                    let newName = {
+                        label: el.stocK_EXCHANGE_SYMBOL,
+                        value: el.id
+                    };
+                    this.stocknames.push(newName);
+                });
+
+                //for (let i = 0; i < this.strary.length; i++) {
+                //    let newName = {
+                //        label: this.strary[i],
+                //        value: this.straryid[i]
+                //    };
+                //    this.stocknames.push(newName);
+                //}
+
+
+                //this.selectedStocks = [];
+                //this.stockexchanges.map((item) => this.selectedStocks.push(item.stocK_EXCHANGE_SYMBOL));
+                //console.log('sel:', this.selectedStocks);
+                //this.strary.length
+                //for (var index in this.strary) {
+                //    console.log(index);
+                //    //this.brands.push({ label: this.strary[index], value: this.strary[index] })
+                //}
+                //this.brands = [
+                //    { label: this.strary[0], value: this.strary[0] },
+                //    { label: this.strary[1], value: this.strary[1] }
+                //];
+                //let selectedCities: string[] = ["NSE", "BSE"]
+                console.log('produ: ', this.stocknames);
+                //console.log('st: ', this.stockexchanges);
+                //console.log('products1: ', this.stocknames)
+                //this.brands = [
+                //    { label: 'NSE', value: 'NSE' }
+
+                //];
+
+            });
+    }
+    onChange(event) {
+        debugger
+        console.log('event :' + event);
+        console.log(event.value);
+    }
+    onmulChange(event) {
+        //debugger
+        console.log('event :' + event);
+        console.log(event.value);
+    }
+    getAllCurrency() {
+
+        //this.CurrSymbolArr = [];
+        //this._MasterEntityService.getAllCurrency().subscribe(
+        //    e1 => this.CurrSymbolArr.push({
+        //        label: e1.items.forEach({}), value: currency.items }),
+        //    error => MessageUtil.addError(this.messageService, 'Error in loading Currencies', error),
+        //    () => this.getSelectedCurrency()
+        //);
+        
+        this._MasterEntityService
+            .getAllCurrency()
+            .subscribe((result: ListResultDtoOfCurrencyDto) => {
+                this.Currencies = result.items;
+                this.CurrSymbolArr = this.Currencies.map((obj: CurrencyDto) => obj.currencyAlias);
+                //this.Currencies.map((item) => this.CurrSymbolArr.push(item.currencySymbol));
+                //for (let i = 0; i < this.CurrSymbolArr.length; i++) {
+                //    let newName = {
+                //        label: this.CurrSymbolArr[i],
+                //        value: this.CurrSymbolArr[i]
+                //    };
+                //    this.CurrSymbolNames.push(newName);
+                //}
+
+                this.Currencies.forEach(el => {
+                    let newName = {
+                        label: el.currencyAlias,
+                        value: el.id
+                    };
+                    this.CurrSymbolNames.push(newName);
+                });
+            });
+        
+    }
+
+    onRowEditInit(instrumenttype: instrumentTypeDto) {
+        //this.clonedInstrumentType[instrumenttype.sesymbol] = { ...instrumenttype };
+        this.selitems = instrumenttype.sesymbol;
+        //this.splitsingSE = instrumenttype.stockecchangesymbol;
+        this.stocknames.forEach(el => {
+            if (el.label == instrumenttype.stockecchangesymbol) {
+                this.splitsingSE = el.value;
+                
+            }
+            
+        });
+
+        this.nse = this.splitsingSE;
+        console.log('seo', this.splitsingSE);
+        var splitedst = this.selitems.split(',');
+        console.log('split', splitedst);
+        this.splitary = splitedst;
+        this.curr = instrumenttype.currencyAlias;
+        this.stocksEdit = instrumenttype.insdisplayname;
+        //this.CurrSymbolNames = [];
+    }
+    onRowEditCancel(instrumenttype: instrumentTypeDto, index: number) {
+        //this.instT[index] = this.clonedInstrumentType[instrumenttype.id];
+        //delete this.clonedInstrumentType[instrumenttype.id];
+    }
+
+    onRowEditSave(car: InstrumentTypeDto) {
+
+        car.msEid = '1,2,4';
+        car.insdisplayname = 'e';
+        car.semvalrpt = 2;
+        car.isenabled = true;
+        car.ciMid = 1;
+        car.curencyid = 2;
+        car.id = 1;
+        this.saving = true;
+        console.log('id:', this.splitsingSE);
+        if (car.id > 0) {
+            debugger
+            //this._InstrumentTypeService.UpdateIntrumentType(car);
+            this._InstrumentTypeService
+                .UpdateIntrumentType(car)
+                .pipe(
+                    finalize(() => {
+                        this.saving = false;
+                    })
+                )
+                .subscribe(() => {
+                    this.notify.info(this.l('SavedSuccessfully'));
+                   
+                });
+            //this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Car is updated' });
+        }
+        else {
+            //this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Year is required' });
+        }
+    }
+
+    //list(
+    //    request: PagedInstrumentTypeRequestDto,
+    //    pageNumber: number,
+    //    finishedCallback: Function
+    //): void {
+
+    //    request.keyword = this.keyword;
+
+    //    this._InstrumentTypeService
+    //        .getAllInstrumentType()
+    //        .pipe(
+    //            finalize(() => {
+    //                finishedCallback();
+    //            })
+    //        )
+    //        .subscribe((result: PagedResultDtoOfInstrumentTypeDto) => {
+    //            this.InstrumentTypes = result.items;
+    //            this.showPaging(result, pageNumber);
+    //        });
+    //}
+    //onRowEditInit(instrumenttypeDto: InstrumentTypeDto) {
+    //    this.clonedInstrumentTypeDto[instrumenttypeDto.currencyAlias] = { ...instrumenttypeDto };
+    //}
+    //ngOnInit() {
+
+    //    this._InstrumentTypeService.getAllInstrumentType();
+    //}
+    //delete(InstrumentType: InstrumentTypeDto): void {
+    //    abp.message.confirm(
+    //        this.l('RoleDeleteWarningMessage', InstrumentType.instrumentname),
+    //        (result: boolean) => {
+    //            if (result) {
+    //                this._InstrumentTypeService
+    //                    .delete(InstrumentType.id)
+    //                    .pipe(
+    //                        finalize(() => {
+    //                            abp.notify.success(this.l('SuccessfullyDeleted'));
+    //                            this.refresh();
+    //                        })
+    //                    )
+    //                    .subscribe(() => { });
+    //            }
+    //        }
+    //    );
+    //}
+}
+
+
+//export class InstrumentTypeComponent implements OnInit {
+
+//    cars1: Car[];
+
+//    cars2: Car[];
+
+//    brands: SelectItem[];
+
+//    clonedCars: { [s: string]: Car; } = {};
+
+//    constructor(private carService: CarService, private messageService: MessageService) { }
+
+//    ngOnInit() {
+//        this.carService.getCarsSmall().then(cars => this.cars1 = cars);
+//        this.carService.getCarsSmall().then(cars => this.cars2 = cars);
+
+//        this.brands = [
+//            { label: 'Audi', value: 'Audi' },
+//            { label: 'BMW', value: 'BMW' },
+//            { label: 'Fiat', value: 'Fiat' },
+//            { label: 'Ford', value: 'Ford' },
+//            { label: 'Honda', value: 'Honda' },
+//            { label: 'Jaguar', value: 'Jaguar' },
+//            { label: 'Mercedes', value: 'Mercedes' },
+//            { label: 'Renault', value: 'Renault' },
+//            { label: 'VW', value: 'VW' },
+//            { label: 'Volvo', value: 'Volvo' }
+//        ];
+//    }
+
+//    onRowEditInit(car: Car) {
+//        this.clonedCars[car.vin] = { ...car };
+//    }
+
+//    onRowEditSave(car: Car) {
+//        if (car.year > 0) {
+//            delete this.clonedCars[car.vin];
+//            this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Car is updated' });
+//        }
+//        else {
+//            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Year is required' });
+//        }
+//    }
+
+//    onRowEditCancel(car: Car, index: number) {
+//        this.cars2[index] = this.clonedCars[car.vin];
+//        delete this.clonedCars[car.vin];
+//    }
+
+//}
+
+
+
+
+
+
+
+
+
