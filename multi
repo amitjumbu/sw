@@ -1,0 +1,33 @@
+
+selctedmultiSE: string[] = [];
+    selctedmultiSEstr: string;
+
+onmulChange(event) {
+        debugger
+        let namesarr = [] = event.value;
+
+        for (var i = 0; i < namesarr.length; i++) {
+            //namesarr[i] = i * 2
+            //console.log(arr_names[i])
+            this.stocknames.forEach(el => {
+                //debugger
+                if (namesarr[i] == el.value) {
+                    this.selctedmultiSE.push(el.id.toString());
+                }
+
+            });
+        }
+
+        //namesarr.forEach(vl => {
+
+        //    this.stocknames.forEach(el => {
+        //    debugger
+            
+                
+        //    });
+
+        //});
+        console.log('event :', this.selctedmultiSE);
+        this.selctedmultiSEstr = this.selctedmultiSE.toString();
+        //console.log(event.value);
+    }
